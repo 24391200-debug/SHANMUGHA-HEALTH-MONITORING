@@ -80,7 +80,6 @@ margin-top:20px;
 <h2>Admin Login</h2>
 
 <input type="text" id="adminID" placeholder="Admin ID">
-
 <input type="password" id="password" placeholder="Password">
 
 <br>
@@ -91,66 +90,56 @@ margin-top:20px;
 
 </div>
 
-
 <div id="dashboard" style="display:none">
 
 <h1>SHANMUGHA POLYTECHNIC COLLEGE</h1>
-<h2>DEPARTMENT OF ELECTRICAL AND ELECTRONICS</h2>
-<h3>Shanmugha Health Monitoring Dashboard</h3>
+<h2>Department of Electrical and Electronics</h2>
+<h3>Health Monitoring Dashboard</h3>
 
 <div class="container">
 
 <div class="card">
-Patient Name
-<br>
+Patient Name<br>
 <span id="name">--</span>
 </div>
 
 <div class="card">
-Patient ID
-<br>
+Patient ID<br>
 <span id="pid">--</span>
 </div>
 
 <div class="card">
-Age
-<br>
+Age<br>
 <span id="age">--</span>
 </div>
 
 <div class="card">
-Sex
-<br>
+Sex<br>
 <span id="sex">--</span>
 </div>
 
 <div class="card">
-Pulse
-<br>
+Pulse<br>
 <span id="pulse">--</span> bpm
 </div>
 
 <div class="card">
-SpO2
-<br>
+SpO2<br>
 <span id="spo2">--</span> %
 </div>
 
 <div class="card">
-Temperature
-<br>
+Temperature<br>
 <span id="temp">--</span> °C
 </div>
 
 <div class="card">
-Systolic
-<br>
+Systolic<br>
 <span id="sys">--</span>
 </div>
 
 <div class="card">
-Diastolic
-<br>
+Diastolic<br>
 <span id="dia">--</span>
 </div>
 
@@ -162,19 +151,16 @@ Diastolic
 
 </div>
 
-
 <script>
 
-/* Admin Credentials */
+/* ADMIN LOGIN */
 
 const admins = {
 
 "24391200@sastra.ac.in":"24391200",
-
 "24303663@sastra.ac.in":"24303663"
 
 }
-
 
 function login(){
 
@@ -198,72 +184,63 @@ document.getElementById("error").innerHTML="Invalid Admin Login"
 
 }
 
-
-/* Firebase Config */
+/* FIREBASE CONFIG */
 
 const firebaseConfig = {
-
-apiKey:"AIzaSyDiz8J1ivsumAqO6iOBPBX_OISNGtlQ38c",
-
-authDomain:"shanmugha-patient-monitoring.firebaseapp.com",
-
-databaseURL:"https://shanmugha-patient-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-projectId:"shanmugha-patient-monitoring",
-
-storageBucket:"shanmugha-patient-monitoring.firebasestorage.app",
-
-messagingSenderId:"369476144941",
-
-appId:"1:369476144941:web:fafec0df720227518ecda4"
-
+  apiKey: "AIzaSyDiz8J1ivsumAqO6iOBPBX_OISNGtlQ38c",
+  authDomain: "shanmugha-patient-monitoring.firebaseapp.com",
+  databaseURL: "https://shanmugha-patient-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "shanmugha-patient-monitoring",
+  storageBucket: "shanmugha-patient-monitoring.firebasestorage.app",
+  messagingSenderId: "369476144941",
+  appId: "1:369476144941:web:fafec0df720227518ecda4"
 };
-
 
 firebase.initializeApp(firebaseConfig)
 
 const db = firebase.database()
 
+/* CURRENT PATIENT */
+
+let patientID="P001"
+
+/* LOAD DATA */
 
 function loadFirebase(){
 
-/* Patient Details */
-
-db.ref("patient/name").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/info/name").on("value",(snap)=>{
 document.getElementById("name").innerHTML=snap.val()
 })
 
-db.ref("patient/id").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/info/id").on("value",(snap)=>{
 document.getElementById("pid").innerHTML=snap.val()
 })
 
-db.ref("patient/age").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/info/age").on("value",(snap)=>{
 document.getElementById("age").innerHTML=snap.val()
 })
 
-db.ref("patient/sex").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/info/sex").on("value",(snap)=>{
 document.getElementById("sex").innerHTML=snap.val()
 })
 
-/* Vitals */
-
-db.ref("health/pulse").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/health/pulse").on("value",(snap)=>{
 document.getElementById("pulse").innerHTML=snap.val()
 })
 
-db.ref("health/spo2").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/health/spo2").on("value",(snap)=>{
 document.getElementById("spo2").innerHTML=snap.val()
 })
 
-db.ref("health/temperature").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/health/temperature").on("value",(snap)=>{
 document.getElementById("temp").innerHTML=snap.val()
 })
 
-db.ref("health/bp/systolic").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/health/bp/systolic").on("value",(snap)=>{
 document.getElementById("sys").innerHTML=snap.val()
 })
 
-db.ref("health/bp/diastolic").on("value",(snap)=>{
+db.ref("patients/"+patientID+"/health/bp/diastolic").on("value",(snap)=>{
 document.getElementById("dia").innerHTML=snap.val()
 })
 
@@ -271,8 +248,7 @@ loadECG()
 
 }
 
-
-/* ECG Graph */
+/* ECG CHART */
 
 let ctx=document.getElementById("ecgChart").getContext("2d")
 
@@ -300,23 +276,18 @@ x:{display:false}
 
 })
 
-
 function loadECG(){
 
-firebase.database().ref("health/ecg_graph").limitToLast(100).on("value",(snap)=>{
+firebase.database().ref("patients/"+patientID+"/health/ecg_graph").limitToLast(100).on("value",(snap)=>{
 
 let ecg=[]
 
 snap.forEach((child)=>{
-
 ecg.push(child.val())
-
 })
 
 ecgChart.data.labels=ecg.map((v,i)=>i)
-
 ecgChart.data.datasets[0].data=ecg
-
 ecgChart.update()
 
 })
@@ -326,5 +297,4 @@ ecgChart.update()
 </script>
 
 </body>
-
 </html>
