@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Shanmugha Health Monitoring</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+margin:0;
+}
+
+.container{
+width:90%;
+margin:auto;
+margin-top:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+display:inline-block;
+width:200px;
+font-size:20px;
+}
+
+h1{
+margin-top:20px;
+}
+
+.login{
+width:350px;
+margin:auto;
+margin-top:120px;
+background:white;
+color:black;
+padding:30px;
+border-radius:10px;
+}
+
+input{
+width:90%;
+padding:10px;
+margin:10px;
+}
+
+button{
+padding:10px 20px;
+background:#2563eb;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+canvas{
+background:white;
+border-radius:10px;
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="loginPage" class="login">
+
+<h2>Admin Login</h2>
+
+<input type="text" id="adminID" placeholder="Admin ID">
+
+<input type="password" id="password" placeholder="Password">
+
+<br>
+
+<button onclick="login()">Login</button>
+
+<p id="error" style="color:red"></p>
+
+</div>
+
+
+<div id="dashboard" style="display:none">
+
+<h1>SHANMUGHA POLYTECHNIC COLLEGE</h1>
+<h2>DEPARTMENT OF ELECTRICAL AND ELECTRONICS</h2>
+<h3>Shanmugha Health Monitoring Dashboard</h3>
+
+<div class="container">
+
+<div class="card">
+Patient Name
+<br>
+<span id="name">--</span>
+</div>
+
+<div class="card">
+Patient ID
+<br>
+<span id="pid">--</span>
+</div>
+
+<div class="card">
+Age
+<br>
+<span id="age">--</span>
+</div>
+
+<div class="card">
+Sex
+<br>
+<span id="sex">--</span>
+</div>
+
+<div class="card">
+Pulse
+<br>
+<span id="pulse">--</span> bpm
+</div>
+
+<div class="card">
+SpO2
+<br>
+<span id="spo2">--</span> %
+</div>
+
+<div class="card">
+Temperature
+<br>
+<span id="temp">--</span> °C
+</div>
+
+<div class="card">
+Systolic
+<br>
+<span id="sys">--</span>
+</div>
+
+<div class="card">
+Diastolic
+<br>
+<span id="dia">--</span>
+</div>
+
+</div>
+
+<h2>ECG Graph</h2>
+
+<canvas id="ecgChart" width="900" height="350"></canvas>
+
+</div>
+
+
+<script>
+
+/* Admin Credentials */
+
+const admins = {
+
+"24391200@sastra.ac.in":"24391200",
+
+"24303663@sastra.ac.in":"24303663"
+
+}
+
+
+function login(){
+
+let id=document.getElementById("adminID").value
+let pass=document.getElementById("password").value
+
+if(admins[id] && admins[id]==pass){
+
+document.getElementById("loginPage").style.display="none"
+document.getElementById("dashboard").style.display="block"
+
+loadFirebase()
+
+}
+
+else{
+
+document.getElementById("error").innerHTML="Invalid Admin Login"
+
+}
+
+}
+
+
+/* Firebase Config */
+
+const firebaseConfig = {
+
+apiKey:"YOUR_API_KEY",
+
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+
+databaseURL:"YOUR_DATABASE_URL",
+
+projectId:"YOUR_PROJECT",
+
+storageBucket:"YOUR_PROJECT.appspot.com",
+
+messagingSenderId:"",
+
+appId:""
+
+};
+
+
+firebase.initializeApp(firebaseConfig)
+
+const db = firebase.database()
+
+
+function loadFirebase(){
+
+/* Patient Details */
+
+db.ref("patient/name").on("value",(snap)=>{
+document.getElementById("name").innerHTML=snap.val()
+})
+
+db.ref("patient/id").on("value",(snap)=>{
+document.getElementById("pid").innerHTML=snap.val()
+})
+
+db.ref("patient/age").on("value",(snap)=>{
+document.getElementById("age").innerHTML=snap.val()
+})
+
+db.ref("patient/sex").on("value",(snap)=>{
+document.getElementById("sex").innerHTML=snap.val()
+})
+
+/* Vitals */
+
+db.ref("health/pulse").on("value",(snap)=>{
+document.getElementById("pulse").innerHTML=snap.val()
+})
+
+db.ref("health/spo2").on("value",(snap)=>{
+document.getElementById("spo2").innerHTML=snap.val()
+})
+
+db.ref("health/temperature").on("value",(snap)=>{
+document.getElementById("temp").innerHTML=snap.val()
+})
+
+db.ref("health/bp/systolic").on("value",(snap)=>{
+document.getElementById("sys").innerHTML=snap.val()
+})
+
+db.ref("health/bp/diastolic").on("value",(snap)=>{
+document.getElementById("dia").innerHTML=snap.val()
+})
+
+loadECG()
+
+}
+
+
+/* ECG Graph */
+
+let ctx=document.getElementById("ecgChart").getContext("2d")
+
+let ecgChart=new Chart(ctx,{
+
+type:"line",
+
+data:{
+labels:[],
+datasets:[{
+label:"ECG Signal",
+data:[],
+borderColor:"red",
+borderWidth:2,
+fill:false
+}]
+},
+
+options:{
+animation:false,
+scales:{
+x:{display:false}
+}
+}
+
+})
+
+
+function loadECG(){
+
+firebase.database().ref("health/ecg_graph").limitToLast(100).on("value",(snap)=>{
+
+let ecg=[]
+
+snap.forEach((child)=>{
+
+ecg.push(child.val())
+
+})
+
+ecgChart.data.labels=ecg.map((v,i)=>i)
+
+ecgChart.data.datasets[0].data=ecg
+
+ecgChart.update()
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
