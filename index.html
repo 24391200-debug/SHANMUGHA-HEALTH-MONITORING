@@ -26,14 +26,8 @@ background:#1e293b;
 padding:20px;
 }
 
-h1{
-margin:5px;
-}
-
-h2{
-color:#38bdf8;
-margin-top:0;
-}
+h1{margin:5px;}
+h2{color:#38bdf8;margin-top:0;}
 
 .container{
 display:grid;
@@ -60,13 +54,9 @@ font-size:18px;
 color:#cbd5f5;
 }
 
-#ecgCard{
-grid-column:span 2;
-}
+#ecgCard{grid-column:span 2;}
 
-.hidden{
-display:none;
-}
+.hidden{display:none;}
 
 .status{
 color:#f87171;
@@ -78,11 +68,58 @@ background:#020617;
 border-radius:10px;
 }
 
+/* LOGIN */
+
+.login{
+width:350px;
+margin:auto;
+margin-top:120px;
+background:white;
+color:black;
+padding:30px;
+border-radius:10px;
+}
+
+.login input{
+width:90%;
+padding:10px;
+margin:10px;
+}
+
+.login button{
+padding:10px 20px;
+background:#2563eb;
+color:white;
+border:none;
+cursor:pointer;
+}
+
 </style>
 
 </head>
 
 <body>
+
+<!-- LOGIN PAGE -->
+
+<div id="loginPage" class="login">
+
+<h2>Admin Login</h2>
+
+<input type="text" id="adminID" placeholder="Admin ID">
+<input type="password" id="password" placeholder="Password">
+
+<br>
+
+<button onclick="login()">Login</button>
+
+<p id="error" style="color:red"></p>
+
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" style="display:none">
 
 <header>
 <h1>SHANMUGHA POLYTECHNIC COLLEGE</h1>
@@ -92,6 +129,20 @@ border-radius:10px;
 
 <div class="status" id="status">
 Waiting for realtime data...
+</div>
+
+<!-- PATIENT INFO CARD -->
+
+<div class="container">
+
+<div class="card" id="patientCard">
+<div class="label">Patient Information</div>
+<div>Name : <span id="pname">--</span></div>
+<div>ID : <span id="pid">--</span></div>
+<div>Age : <span id="page">--</span></div>
+<div>Sex : <span id="psex">--</span></div>
+</div>
+
 </div>
 
 <div class="container">
@@ -123,16 +174,38 @@ Waiting for realtime data...
 
 </div>
 
+</div>
+
 <script>
 
-var firebaseConfig = {
-  apiKey: "AIzaSyDiz8J1ivsumAqO6iOBPBX_OISNGtlQ38c",
-  authDomain: "shanmugha-patient-monitoring.firebaseapp.com",
-  databaseURL: "https://shanmugha-patient-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "shanmugha-patient-monitoring",
-  storageBucket: "shanmugha-patient-monitoring.firebasestorage.app",
-  messagingSenderId: "369476144941",
-  appId: "1:369476144941:web:fafec0df720227518ecda4"
+/* ADMIN LOGIN */
+
+const admins={
+"24391200@sastra.ac.in":"24391200",
+"24303663@sastra.ac.in":"2430366"
+}
+
+function login(){
+
+let id=document.getElementById("adminID").value
+let pass=document.getElementById("password").value
+
+if(admins[id] && admins[id]==pass){
+
+document.getElementById("loginPage").style.display="none"
+document.getElementById("dashboard").style.display="block"
+
+}
+else{
+document.getElementById("error").innerHTML="Invalid Login"
+}
+
+}
+
+/* FIREBASE */
+
+var firebaseConfig={
+databaseURL:"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -160,10 +233,7 @@ options:{
 responsive:true,
 animation:false,
 plugins:{legend:{display:false}},
-scales:{
-x:{display:false},
-y:{display:false}
-}
+scales:{x:{display:false},y:{display:false}}
 }
 });
 
@@ -194,6 +264,15 @@ lastUpdate=Date.now();
 
 document.getElementById("status").innerHTML="Realtime Data Connected";
 
+/* PATIENT INFO */
+
+document.getElementById("pname").innerHTML=data.info.name;
+document.getElementById("pid").innerHTML=data.info.id;
+document.getElementById("page").innerHTML=data.info.age;
+document.getElementById("psex").innerHTML=data.info.sex;
+
+/* HEALTH DATA */
+
 document.getElementById("pulse").innerHTML=data.health.pulse;
 document.getElementById("oxygen").innerHTML=data.health.spo2;
 document.getElementById("hr").innerHTML=data.health.pulse;
@@ -201,7 +280,7 @@ document.getElementById("hr").innerHTML=data.health.pulse;
 document.getElementById("bp").innerHTML=
 data.health.bp.systolic + "/" + data.health.bp.diastolic;
 
-/* ECG Graph */
+/* ECG */
 
 var ecg=data.health.ecg_graph;
 
