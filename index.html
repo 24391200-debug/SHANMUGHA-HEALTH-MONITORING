@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html>
 
+<html lang="en">
 <head>
-
+<meta charset="UTF-8">
 <title>Health Monitoring Dashboard</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -19,37 +21,61 @@ text-align:center;
 margin:0;
 }
 
+header{
+background:#1e293b;
+padding:20px;
+}
+
 h1{
-margin-top:20px;
+margin:5px;
+}
+
+h2{
+color:#38bdf8;
+margin-top:0;
 }
 
 .container{
-width:90%;
-margin:auto;
-margin-top:20px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+padding:30px;
 }
 
 .card{
 background:#1e293b;
-padding:20px;
-margin:10px;
+padding:25px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.5);
+}
+
+.value{
+font-size:35px;
+color:#22c55e;
+margin-top:10px;
+}
+
+.label{
+font-size:18px;
+color:#cbd5f5;
+}
+
+#ecgCard{
+grid-column:span 2;
+}
+
+.hidden{
+display:none;
+}
+
+.status{
+color:#f87171;
+margin-bottom:20px;
+}
+
+canvas{
+background:#020617;
 border-radius:10px;
-display:inline-block;
-width:200px;
-font-size:20px;
-vertical-align:top;
-}
-
-.ecg-card{
-width:420px;
-height:220px;
-}
-
-#ecgChart{
-width:100%;
-height:150px;
-background:white;
-border-radius:8px;
 }
 
 </style>
@@ -58,68 +84,48 @@ border-radius:8px;
 
 <body>
 
+<header>
 <h1>SHANMUGHA POLYTECHNIC COLLEGE</h1>
-<h2>Health Monitoring Dashboard</h2>
+<h2>DEPARTMENT OF ELECTRICAL AND ELECTRONICS</h2>
+<h3>Health Monitoring Dashboard</h3>
+</header>
+
+<div class="status" id="status">
+Waiting for realtime data...
+</div>
 
 <div class="container">
 
-<div class="card">
-Name<br>
-<span id="name">--</span>
-</div>
-
-<div class="card">
-Patient ID<br>
-<span id="pid">--</span>
-</div>
-
-<div class="card">
-Age<br>
-<span id="age">--</span>
-</div>
-
-<div class="card">
-Sex<br>
-<span id="sex">--</span>
-</div>
-
-<div class="card">
-Pulse<br>
-<span id="pulse">--</span>
-</div>
-
-<div class="card">
-SpO2<br>
-<span id="spo2">--</span>
-</div>
-
-<div class="card">
-Temperature<br>
-<span id="temp">--</span>
-</div>
-
-<div class="card">
-Systolic<br>
-<span id="sys">--</span>
-</div>
-
-<div class="card">
-Diastolic<br>
-<span id="dia">--</span>
-</div>
-
-<div class="card ecg-card">
-ECG
+<div class="card" id="ecgCard">
+<div class="label">ECG Graph</div>
 <canvas id="ecgChart"></canvas>
+</div>
+
+<div class="card" id="pulseCard">
+<div class="label">Pulse</div>
+<div id="pulse" class="value">--</div>
+</div>
+
+<div class="card" id="oxygenCard">
+<div class="label">Oxygen</div>
+<div id="oxygen" class="value">--</div>
+</div>
+
+<div class="card" id="hrCard">
+<div class="label">Heart Rate</div>
+<div id="hr" class="value">--</div>
+</div>
+
+<div class="card" id="bpCard">
+<div class="label">Blood Pressure</div>
+<div id="bp" class="value">--</div>
 </div>
 
 </div>
 
 <script>
 
-/* FIREBASE CONFIG */
-
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyDiz8J1ivsumAqO6iOBPBX_OISNGtlQ38c",
   authDomain: "shanmugha-patient-monitoring.firebaseapp.com",
   databaseURL: "https://shanmugha-patient-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -129,102 +135,115 @@ const firebaseConfig = {
   appId: "1:369476144941:web:fafec0df720227518ecda4"
 };
 
-firebase.initializeApp(firebaseConfig)
+firebase.initializeApp(firebaseConfig);
 
-const db = firebase.database()
+var database=firebase.database();
 
-let patientID="P001"
+let lastUpdate=Date.now();
 
-/* PATIENT INFO */
+let ecgData=[];
 
-db.ref("patients/"+patientID+"/info/name").on("value",(snap)=>{
-document.getElementById("name").innerHTML=snap.val()
-})
+const ctx=document.getElementById("ecgChart").getContext("2d");
 
-db.ref("patients/"+patientID+"/info/id").on("value",(snap)=>{
-document.getElementById("pid").innerHTML=snap.val()
-})
-
-db.ref("patients/"+patientID+"/info/age").on("value",(snap)=>{
-document.getElementById("age").innerHTML=snap.val()
-})
-
-db.ref("patients/"+patientID+"/info/sex").on("value",(snap)=>{
-document.getElementById("sex").innerHTML=snap.val()
-})
-
-/* HEALTH DATA */
-
-db.ref("patients/"+patientID+"/health/pulse").on("value",(snap)=>{
-document.getElementById("pulse").innerHTML=snap.val()
-})
-
-db.ref("patients/"+patientID+"/health/spo2").on("value",(snap)=>{
-document.getElementById("spo2").innerHTML=snap.val()
-})
-
-db.ref("patients/"+patientID+"/health/temperature").on("value",(snap)=>{
-document.getElementById("temp").innerHTML=snap.val()
-})
-
-db.ref("patients/"+patientID+"/health/bp/systolic").on("value",(snap)=>{
-document.getElementById("sys").innerHTML=snap.val()
-})
-
-db.ref("patients/"+patientID+"/health/bp/diastolic").on("value",(snap)=>{
-document.getElementById("dia").innerHTML=snap.val()
-})
-
-/* ECG GRAPH */
-
-let ctx=document.getElementById("ecgChart").getContext("2d")
-
-let ecgChart=new Chart(ctx,{
-
+const chart=new Chart(ctx,{
 type:"line",
-
 data:{
 labels:[],
 datasets:[{
-data:[],
-borderColor:"red",
+data:ecgData,
+borderColor:"#22c55e",
 borderWidth:2,
-fill:false,
 pointRadius:0
 }]
 },
-
 options:{
 responsive:true,
-maintainAspectRatio:false,
 animation:false,
-plugins:{
-legend:{display:false}
-},
+plugins:{legend:{display:false}},
 scales:{
 x:{display:false},
 y:{display:false}
 }
 }
+});
 
-})
+function updateECG(value){
 
-firebase.database().ref("patients/"+patientID+"/health/ecg_graph").limitToLast(50).on("value",(snap)=>{
+ecgData.push(value);
 
-let ecg=[]
+if(ecgData.length>60){
+ecgData.shift();
+}
 
-snap.forEach((child)=>{
-ecg.push(child.val())
-})
+chart.data.labels.push("");
 
-ecgChart.data.labels=ecg.map((v,i)=>i)
-ecgChart.data.datasets[0].data=ecg
-ecgChart.update()
+if(chart.data.labels.length>60){
+chart.data.labels.shift();
+}
 
-})
+chart.update();
+}
+
+database.ref("/patients/P001").on("value",function(snapshot){
+
+var data=snapshot.val();
+
+if(!data)return;
+
+lastUpdate=Date.now();
+
+document.getElementById("status").innerHTML="Realtime Data Connected";
+
+document.getElementById("pulse").innerHTML=data.health.pulse;
+document.getElementById("oxygen").innerHTML=data.health.spo2;
+document.getElementById("hr").innerHTML=data.health.pulse;
+
+document.getElementById("bp").innerHTML=
+data.health.bp.systolic + "/" + data.health.bp.diastolic;
+
+/* ECG Graph */
+
+var ecg=data.health.ecg_graph;
+
+for(var key in ecg){
+updateECG(ecg[key]);
+}
+
+showCards();
+
+});
+
+function hideCards(){
+
+document.getElementById("pulseCard").classList.add("hidden");
+document.getElementById("oxygenCard").classList.add("hidden");
+document.getElementById("hrCard").classList.add("hidden");
+document.getElementById("bpCard").classList.add("hidden");
+document.getElementById("ecgCard").classList.add("hidden");
+
+document.getElementById("status").innerHTML="No realtime data detected";
+
+}
+
+function showCards(){
+
+document.getElementById("pulseCard").classList.remove("hidden");
+document.getElementById("oxygenCard").classList.remove("hidden");
+document.getElementById("hrCard").classList.remove("hidden");
+document.getElementById("bpCard").classList.remove("hidden");
+document.getElementById("ecgCard").classList.remove("hidden");
+
+}
+
+setInterval(function(){
+
+if(Date.now()-lastUpdate>8000){
+hideCards();
+}
+
+},3000);
 
 </script>
 
 </body>
 </html>
-
