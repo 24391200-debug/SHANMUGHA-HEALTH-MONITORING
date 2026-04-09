@@ -12,7 +12,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
 body{
 font-family:Arial;
 background:#0f172a;
@@ -68,8 +67,6 @@ background:#020617;
 border-radius:10px;
 }
 
-/* PATIENT CARD FONT & SPACING INCREASE */
-
 #patientCard{
 font-size:22px;
 line-height:2;
@@ -84,8 +81,6 @@ margin-bottom:15px;
 #patientCard div{
 margin-top:10px;
 }
-
-/* LOGIN */
 
 .login{
 width:350px;
@@ -110,28 +105,21 @@ color:white;
 border:none;
 cursor:pointer;
 }
-
 </style>
 
 </head>
 
 <body>
 
-<!-- LOGIN PAGE -->
+<!-- LOGIN -->
 
 <div id="loginPage" class="login">
-
 <h2>Admin Login</h2>
-
 <input type="text" id="adminID" placeholder="Admin ID">
 <input type="password" id="password" placeholder="Password">
-
 <br>
-
 <button onclick="login()">Login</button>
-
 <p id="error" style="color:red"></p>
-
 </div>
 
 <!-- DASHBOARD -->
@@ -148,10 +136,7 @@ cursor:pointer;
 Waiting for realtime data...
 </div>
 
-<!-- PATIENT INFO CARD -->
-
 <div class="container">
-
 <div class="card" id="patientCard">
 <div class="label">Patient Information</div>
 <div>Name : <span id="pname">--</span></div>
@@ -159,7 +144,6 @@ Waiting for realtime data...
 <div>Age : <span id="page">--</span></div>
 <div>Sex : <span id="psex">--</span></div>
 </div>
-
 </div>
 
 <div class="container">
@@ -190,53 +174,44 @@ Waiting for realtime data...
 </div>
 
 </div>
-
 </div>
 
 <script>
 
-/* ADMIN LOGIN */
-
+/* LOGIN */
 const admins={
 "24391200@sastra.ac.in":"24391200",
 "24303663@sastra.ac.in":"24303663"
 }
 
 function login(){
-
 let id=document.getElementById("adminID").value
 let pass=document.getElementById("password").value
 
 if(admins[id] && admins[id]==pass){
-
 document.getElementById("loginPage").style.display="none"
 document.getElementById("dashboard").style.display="block"
-
 }
 else{
 document.getElementById("error").innerHTML="Invalid Login"
 }
-
 }
 
 /* FIREBASE */
-
 var firebaseConfig={
-  apiKey: "AIzaSyDiz8J1ivsumAqO6iOBPBX_OISNGtlQ38c",
-  authDomain: "shanmugha-patient-monitoring.firebaseapp.com",
-  databaseURL: "https://shanmugha-patient-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "shanmugha-patient-monitoring",
-  storageBucket: "shanmugha-patient-monitoring.firebasestorage.app",
-  messagingSenderId: "369476144941",
-  appId: "1:369476144941:web:fafec0df720227518ecda4"
+  apiKey: "AIzaSyBFfZB7fLwac6fQDJpDwbF4bVuNE0djHh8",
+  authDomain: "shanmugha-patient-monitor.firebaseapp.com",
+  databaseURL: "https://shanmugha-patient-monitor-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "shanmugha-patient-monitor",
+  storageBucket: "shanmugha-patient-monitor.firebasestorage.app",
+  messagingSenderId: "744392882608",
+  appId: "1:744392882608:web:b0a5494b654f9554267e75"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 var database=firebase.database();
 
 let lastUpdate=Date.now();
-
 let ecgData=[];
 
 const ctx=document.getElementById("ecgChart").getContext("2d");
@@ -260,42 +235,39 @@ scales:{x:{display:false},y:{display:false}}
 }
 });
 
+/* UPDATED ECG FUNCTION */
 function updateECG(value){
-
 ecgData.push(value);
 
-if(ecgData.length>60){
+if(ecgData.length>100){
 ecgData.shift();
 }
 
 chart.data.labels.push("");
 
-if(chart.data.labels.length>60){
+if(chart.data.labels.length>100){
 chart.data.labels.shift();
 }
 
 chart.update();
 }
 
+/* FIREBASE DATA */
 database.ref("/patients/P001").on("value",function(snapshot){
 
 var data=snapshot.val();
-
 if(!data)return;
 
 lastUpdate=Date.now();
-
 document.getElementById("status").innerHTML="Realtime Data Connected";
 
 /* PATIENT INFO */
-
 document.getElementById("pname").innerHTML=data.info.name;
 document.getElementById("pid").innerHTML=data.info.id;
 document.getElementById("page").innerHTML=data.info.age;
 document.getElementById("psex").innerHTML=data.info.sex;
 
 /* HEALTH DATA */
-
 document.getElementById("pulse").innerHTML=data.health.pulse;
 document.getElementById("oxygen").innerHTML=data.health.spo2;
 document.getElementById("hr").innerHTML=data.health.pulse;
@@ -303,46 +275,46 @@ document.getElementById("hr").innerHTML=data.health.pulse;
 document.getElementById("bp").innerHTML=
 data.health.bp.systolic + "/" + data.health.bp.diastolic;
 
-/* ECG */
+/* ✅ FIXED ECG */
+var ecg = data.health.ecg_graph;
 
-var ecg=data.health.ecg_graph;
+if(ecg){
+let keys = Object.keys(ecg).sort((a,b)=>a-b);
 
-for(var key in ecg){
-updateECG(ecg[key]);
+ecgData.length = 0;
+chart.data.labels = [];
+
+for(let i=0;i<keys.length;i++){
+updateECG(ecg[keys[i]]);
+}
 }
 
 showCards();
 
 });
 
+/* UI CONTROL */
 function hideCards(){
-
 document.getElementById("pulseCard").classList.add("hidden");
 document.getElementById("oxygenCard").classList.add("hidden");
 document.getElementById("hrCard").classList.add("hidden");
 document.getElementById("bpCard").classList.add("hidden");
 document.getElementById("ecgCard").classList.add("hidden");
-
 document.getElementById("status").innerHTML="No realtime data detected";
-
 }
 
 function showCards(){
-
 document.getElementById("pulseCard").classList.remove("hidden");
 document.getElementById("oxygenCard").classList.remove("hidden");
 document.getElementById("hrCard").classList.remove("hidden");
 document.getElementById("bpCard").classList.remove("hidden");
 document.getElementById("ecgCard").classList.remove("hidden");
-
 }
 
 setInterval(function(){
-
 if(Date.now()-lastUpdate>8000){
 hideCards();
 }
-
 },3000);
 
 </script>
